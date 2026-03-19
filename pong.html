@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser Pong</title>
+    <style>
+        body {
+            background-color: #222;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        canvas {
+            background-color: #000;
+            border: 2px solid #fff;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            cursor: none; /* Hides the mouse cursor over the game */
+        }
+        p {
+            margin-top: 15px;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>PONG</h1>
+    <!-- The canvas where the game is drawn -->
+    <canvas id="pongCanvas" width="800" height="400"></canvas>
+    <p>Move your mouse up and down to control the left paddle!</p>
+
+    <script>
+        // Get the canvas element and its context
+        const canvas = document.getElementById("pongCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Create the game objects
+        const ball = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 10,
+            velocityX: 5,
+            velocityY: 5,
+            speed: 7,
+            color: "WHITE"
+        };
+
+        const user = {
+            x: 10, // Left side
+            y: (canvas.height - 100) / 2,
+            width: 10,
+            height: 100,
+            score: 0,
+            color: "WHITE"
+        };
+
+        const com = {
+            x: canvas.width - 20, // Right side
+            y: (canvas.height - 100) / 2,
+            width: 10,
+            height: 100,
+            score: 0,
+            color: "WHITE"
+        };
+
+        const net = {
+            x: (canvas.width - 2) / 2,
+            y: 0,
+            width: 2,
+            height: 10,
+            color: "WHITE"
+        };
+
+        // Draw a rectangle (paddles)
+        function drawRect(x, y, w, h, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, w, h);
+        }
+
+        // Draw a circle (the ball)
+        function drawArc(x, y, r, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        // Control the user paddle with the mouse
+        canvas.addEventListener("mousemove", getMousePos);
+
+        function getMousePos(evt) {
+            let rect = canvas.getBoundingClientRect();
+            // Center the paddle on the mouse cursor
+            user.y = evt.clientY - rect.top - user.height / 2;
+        }
+
+        // Reset the ball after a score
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.speed = 7;
+            ball.velocityX = -ball.velocityX; // Send it to the other player
+        }
+
+        // Draw the dashed net
+        function drawNet() {
+            for (let i = 0; i <= canvas.height; i += 15) {
+                drawRect(net.x, net.y + i, net.width, net.height, net.color);
+            }
+        }
+
+        // Draw text (scores)
+        function drawText(text, x, y) {
+            ctx.fillStyle = "#FFF";
+            ctx.font = "45px 'Courier New'";
+            ctx.fillText(text, x, y);
+        }
+
+        // Draw everything on the canvas
+        function render() {
+            // Clear the canvas
+            drawRect(0, 0, canvas.width, canvas.height, "#000");
+            
+            // Draw the net
+            drawNet();
+            
+            // Draw scores
+            drawText(user.score, canvas.width / 4, 50);
+            drawText(com.score, 3 * canvas.width / 4, 50);
+            
+            // Draw paddles and ball
+            drawRect(user.x, user.y, user.width, user.height, user.color);
+            drawRect(com.x, com.y, com.width, com.height, com.color);
+            drawArc(ball.x, ball.y, ball.radius, ball.color);
+        }
+
+        // Detect collision between the ball and a paddle
+        function collision(b, p) {
+            p.top = p.y;
+            p.bottom = p.y + p.height;
+            p.left = p.x;
+            p.right = p.x + p.width;
+            
+            b.top = b.y - b.radius;
+            b.bottom = b.y + b.radius;
+            b.left = b.x - b.radius;
+            b.right = b.x + b.radius;
+            
+            return p.left < b.right && p.top < b.bottom && p.right > b.left && p.bottom > b.top;
+        }
+
+        // Update logic (movement, collisions, scoring)
+        function update() {
+            // Move the ball
+            ball.x += ball.velocityX;
+            ball.y += ball.velocityY;
+
+            // Simple AI for the computer paddle
+            // The 0.1 creates a slight delay so the AI isn't unbeatable
+            com.y += ((ball.y - (com.y + com.height / 2))) * 0.1;
+
+            // Bounce off top and bottom walls
+            if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height) {
+                ball.velocityY = -ball.velocityY;
+            }
+
+            // Check if the ball hits the user or the computer paddle
+            let player = (ball.x + ball.radius < canvas.width / 2) ? user : com;
+
+            if (collision(ball, player)) {
+                // Where did the ball hit the paddle?
+                let collidePoint = (ball.y - (player.y + player.height / 2));
+                
+                // Normalize the value between -1 and 1
+                collidePoint = collidePoint / (player.height / 2);
+                
+                // Calculate bounce angle in radians (45 degrees max)
+                let angleRad = (Math.PI / 4) * collidePoint;
+                
+                // Determine direction (1 for right, -1 for left)
+                let direction = (ball.x + ball.radius < canvas.width / 2) ? 1 : -1;
+                
+                // Change velocity X and Y
+                ball.velocityX = direction * ball.speed * Math.cos(angleRad);
+                ball.velocityY = ball.speed * Math.sin(angleRad);
+                
+                // Speed up the ball slightly after every hit
+                ball.speed += 0.5;
+            }
+
+            // Update scores
+            if (ball.x - ball.radius < 0) {
+                com.score++; // Computer scores
+                resetBall();
+            } else if (ball.x + ball.radius > canvas.width) {
+                user.score++; // User scores
+                resetBall();
+            }
+        }
+
+        // The main game loop
+        function gameLoop() {
+            update();
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start the game loop
+        gameLoop();
+    </script>
+</body>
+</html>

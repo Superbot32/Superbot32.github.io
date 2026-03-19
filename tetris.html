@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Tetris — ARCADE</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:#0a0018;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+  font-family:'Press Start 2P',monospace;
+  color:#b44fff;
+}
+#back-btn{
+  position:absolute;top:16px;left:16px;
+  font-family:'Press Start 2P',monospace;font-size:8px;
+  color:#b44fff;background:none;border:1px solid #b44fff;
+  padding:8px 14px;cursor:pointer;text-decoration:none;z-index:100;
+}
+#back-btn:hover{background:#b44fff;color:#000;}
+h1{font-size:18px;color:#b44fff;text-shadow:2px 2px 0 #4a008f,0 0 20px rgba(180,79,255,0.4);letter-spacing:4px;margin-bottom:14px;}
+#layout{display:flex;gap:24px;align-items:flex-start;}
+#side-panel{display:flex;flex-direction:column;gap:16px;width:110px;}
+.panel-box{border:1px solid #2a0050;padding:12px;background:#0d0020;}
+.panel-label{font-size:7px;color:#6a3a9f;letter-spacing:2px;margin-bottom:8px;}
+.panel-val{font-size:14px;color:#fff;}
+#next-canvas{display:block;image-rendering:pixelated;}
+#game-wrap{position:relative;}
+#game-canvas{display:block;border:2px solid #b44fff;box-shadow:0 0 20px rgba(180,79,255,0.3);image-rendering:pixelated;}
+#overlay{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(0,0,0,0.88);
+}
+#ov-title{font-size:16px;color:#b44fff;text-shadow:2px 2px 0 #4a008f;margin-bottom:14px;letter-spacing:2px;}
+#ov-sub{font-size:7px;color:#aaa;margin-bottom:24px;line-height:2.4;text-align:center;}
+#ov-btn{font-family:'Press Start 2P',monospace;font-size:10px;padding:12px 22px;background:#b44fff;color:#000;border:none;cursor:pointer;letter-spacing:1px;}
+#ov-btn:hover{background:#fff;}
+#mobile-btns{display:grid;grid-template-columns:repeat(4,52px);gap:6px;margin-top:14px;}
+.mb{font-family:'Press Start 2P',monospace;font-size:10px;height:44px;background:#111;border:1.5px solid #333;color:#b44fff;cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;}
+.mb:active{background:#1a0030;}
+</style>
+</head>
+<body>
+<a href="../index.html" id="back-btn">&#8592; ARCADE</a>
+<h1>TETRIS</h1>
+<div id="layout">
+  <div id="side-panel">
+    <div class="panel-box">
+      <div class="panel-label">SCORE</div>
+      <div class="panel-val" id="score-val">0</div>
+    </div>
+    <div class="panel-box">
+      <div class="panel-label">BEST</div>
+      <div class="panel-val" id="best-val">0</div>
+    </div>
+    <div class="panel-box">
+      <div class="panel-label">LEVEL</div>
+      <div class="panel-val" id="level-val">1</div>
+    </div>
+    <div class="panel-box">
+      <div class="panel-label">LINES</div>
+      <div class="panel-val" id="lines-val">0</div>
+    </div>
+    <div class="panel-box">
+      <div class="panel-label">NEXT</div>
+      <canvas id="next-canvas" width="80" height="80"></canvas>
+    </div>
+  </div>
+  <div id="game-wrap">
+    <canvas id="game-canvas" width="200" height="400"></canvas>
+    <div id="overlay">
+      <div id="ov-title">TETRIS</div>
+      <div id="ov-sub">&#8592;&#8594; MOVE<br>&#8593; ROTATE<br>&#8595; SOFT DROP<br>SPACE HARD DROP</div>
+      <button id="ov-btn">START GAME</button>
+    </div>
+  </div>
+</div>
+<div id="mobile-btns">
+  <div class="mb" id="mb-left">&#9664;</div>
+  <div class="mb" id="mb-down">&#9660;</div>
+  <div class="mb" id="mb-rotate">&#8635;</div>
+  <div class="mb" id="mb-right">&#9654;</div>
+</div>
+
+<script>
+const C = document.getElementById('game-canvas');
+const ctx = C.getContext('2d');
+const NC = document.getElementById('next-canvas');
+const nctx = NC.getContext('2d');
+const COLS = 10, ROWS = 20, SZ = 20;
+const scoreEl = document.getElementById('score-val');
+const bestEl  = document.getElementById('best-val');
+const levelEl = document.getElementById('level-val');
+const linesEl = document.getElementById('lines-val');
+const overlay = document.getElementById('overlay');
+const ovTitle = document.getElementById('ov-title');
+const ovSub   = document.getElementById('ov-sub');
+const ovBtn   = document.getElementById('ov-btn');
+
+const PIECES = [
+  { shape:[[1,1,1,1]], color:'#00f5ff' },
+  { shape:[[1,1],[1,1]], color:'#ffe033' },
+  { shape:[[0,1,0],[1,1,1]], color:'#b44fff' },
+  { shape:[[1,0,0],[1,1,1]], color:'#ff6b1a' },
+  { shape:[[0,0,1],[1,1,1]], color:'#4499ff' },
+  { shape:[[0,1,1],[1,1,0]], color:'#39ff14' },
+  { shape:[[1,1,0],[0,1,1]], color:'#ff2d78' },
+];
+
+let board, piece, next, score, best = 0, level, lines, running = false, raf, dropTimer, dropInterval, keys = {};
+
+function newBoard() { return Array.from({length:ROWS},()=>new Array(COLS).fill(0)); }
+
+function randPiece() {
+  const p = PIECES[Math.floor(Math.random()*PIECES.length)];
+  return { shape: p.shape.map(r=>[...r]), color: p.color, x: Math.floor((COLS - p.shape[0].length)/2), y: 0 };
+}
+
+function rotate(shape) {
+  const R = shape.length, C2 = shape[0].length;
+  const out = Array.from({length:C2},()=>new Array(R).fill(0));
+  for(let r=0;r<R;r++) for(let c=0;c<C2;c++) out[c][R-1-r]=shape[r][c];
+  return out;
+}
+
+function fits(shape, ox, oy, bd) {
+  for(let r=0;r<shape.length;r++) for(let c=0;c<shape[r].length;c++) {
+    if(!shape[r][c]) continue;
+    const nx=ox+c, ny=oy+r;
+    if(nx<0||nx>=COLS||ny>=ROWS) return false;
+    if(ny>=0 && bd[ny][nx]) return false;
+  }
+  return true;
+}
+
+function lock() {
+  for(let r=0;r<piece.shape.length;r++) for(let c=0;c<piece.shape[r].length;c++) {
+    if(!piece.shape[r][c]) continue;
+    const ny = piece.y+r;
+    if(ny<0){gameOver();return;}
+    board[ny][piece.x+c] = piece.color;
+  }
+  clearLines();
+  piece = next;
+  next = randPiece();
+  if(!fits(piece.shape,piece.x,piece.y,board)){gameOver();return;}
+  drawNext();
+}
+
+function clearLines() {
+  let cleared = 0;
+  for(let r=ROWS-1;r>=0;r--) {
+    if(board[r].every(c=>c)) {
+      board.splice(r,1);
+      board.unshift(new Array(COLS).fill(0));
+      cleared++; r++;
+    }
+  }
+  if(!cleared) return;
+  const pts = [0,100,300,500,800];
+  score += (pts[cleared]||800)*level;
+  lines += cleared;
+  level = Math.floor(lines/10)+1;
+  dropInterval = Math.max(80, 1000 - (level-1)*90);
+  if(score>best){best=score;bestEl.textContent=best;}
+  scoreEl.textContent=score;
+  levelEl.textContent=level;
+  linesEl.textContent=lines;
+}
+
+function hardDrop() {
+  while(fits(piece.shape,piece.x,piece.y+1,board)) piece.y++;
+  lock();
+}
+
+function initGame() {
+  board=newBoard(); score=0; level=1; lines=0; dropTimer=0; dropInterval=1000;
+  piece=randPiece(); next=randPiece();
+  scoreEl.textContent=0;levelEl.textContent=1;linesEl.textContent=0;
+  drawNext();
+}
+
+function drawBlock(x,y,color,c,r,sz) {
+  c.fillStyle=color;
+  c.fillRect(x*sz+1,y*sz+1,sz-2,sz-2);
+  c.fillStyle='rgba(255,255,255,0.25)';
+  c.fillRect(x*sz+1,y*sz+1,sz-2,3);
+  c.fillStyle='rgba(0,0,0,0.2)';
+  c.fillRect(x*sz+1,y*sz+sz-3,sz-2,2);
+}
+
+function drawGhost() {
+  let gy = piece.y;
+  while(fits(piece.shape,piece.x,gy+1,board)) gy++;
+  if(gy===piece.y) return;
+  for(let r=0;r<piece.shape.length;r++) for(let c=0;c<piece.shape[r].length;c++) {
+    if(!piece.shape[r][c]) continue;
+    ctx.fillStyle='rgba(255,255,255,0.1)';
+    ctx.fillRect((piece.x+c)*SZ+1,(gy+r)*SZ+1,SZ-2,SZ-2);
+  }
+}
+
+function draw() {
+  ctx.fillStyle='#05000f';ctx.fillRect(0,0,C.width,C.height);
+  ctx.strokeStyle='#1a0035';ctx.lineWidth=0.5;
+  for(let r=0;r<ROWS;r++){ctx.beginPath();ctx.moveTo(0,r*SZ);ctx.lineTo(C.width,r*SZ);ctx.stroke();}
+  for(let c=0;c<COLS;c++){ctx.beginPath();ctx.moveTo(c*SZ,0);ctx.lineTo(c*SZ,C.height);ctx.stroke();}
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) if(board[r][c]) drawBlock(c,r,board[r][c],ctx,r,SZ);
+  drawGhost();
+  for(let r=0;r<piece.shape.length;r++) for(let c=0;c<piece.shape[r].length;c++) {
+    if(piece.shape[r][c]) drawBlock(piece.x+c,piece.y+r,piece.color,ctx,r,SZ);
+  }
+}
+
+function drawNext() {
+  nctx.fillStyle='#0d0020';nctx.fillRect(0,0,NC.width,NC.height);
+  const s=next.shape, bsz=16;
+  const ox=Math.floor((5-s[0].length)/2), oy=Math.floor((5-s.length)/2);
+  for(let r=0;r<s.length;r++) for(let c=0;c<s[r].length;c++) {
+    if(s[r][c]) drawBlock(ox+c,oy+r,next.color,nctx,r,bsz);
+  }
+}
+
+let lastT=0;
+function frame(ts) {
+  if(!running) return;
+  const dt=ts-lastT; lastT=ts;
+  dropTimer+=dt;
+  if(keys['ArrowDown']||keys['s']) dropTimer+=dt*2;
+  if(dropTimer>=dropInterval) {
+    dropTimer=0;
+    if(fits(piece.shape,piece.x,piece.y+1,board)) piece.y++;
+    else lock();
+  }
+  draw();
+  raf=requestAnimationFrame(frame);
+}
+
+function gameOver() {
+  running=false;cancelAnimationFrame(raf);
+  ovTitle.textContent='GAME OVER';
+  ovSub.innerHTML=`SCORE: ${score}<br>LEVEL: ${level}<br><br>PRESS START`;
+  ovBtn.textContent='PLAY AGAIN';
+  overlay.style.display='flex';
+}
+
+function startGame() {
+  overlay.style.display='none';running=true;lastT=0;
+  initGame();cancelAnimationFrame(raf);raf=requestAnimationFrame(frame);
+}
+
+ovBtn.addEventListener('click',startGame);
+
+let autoLeft,autoRight,autoDown;
+document.addEventListener('keydown',e=>{
+  if(!running) return;
+  if(e.key==='ArrowLeft'||e.key==='a'){if(fits(piece.shape,piece.x-1,piece.y,board))piece.x--;}
+  if(e.key==='ArrowRight'||e.key==='d'){if(fits(piece.shape,piece.x+1,piece.y,board))piece.x++;}
+  if(e.key==='ArrowUp'||e.key==='w'){
+    const rot=rotate(piece.shape);
+    if(fits(rot,piece.x,piece.y,board))piece.shape=rot;
+    else if(fits(rot,piece.x-1,piece.y,board)){piece.shape=rot;piece.x--;}
+    else if(fits(rot,piece.x+1,piece.y,board)){piece.shape=rot;piece.x++;}
+  }
+  if(e.key===' '){e.preventDefault();hardDrop();}
+  if(e.key==='ArrowDown'||e.key==='s') e.preventDefault();
+  keys[e.key]=true;
+});
+document.addEventListener('keyup',e=>{keys[e.key]=false;});
+
+document.getElementById('mb-left').addEventListener('click',()=>{if(running&&fits(piece.shape,piece.x-1,piece.y,board))piece.x--;});
+document.getElementById('mb-right').addEventListener('click',()=>{if(running&&fits(piece.shape,piece.x+1,piece.y,board))piece.x++;});
+document.getElementById('mb-rotate').addEventListener('click',()=>{
+  if(!running) return;
+  const rot=rotate(piece.shape);
+  if(fits(rot,piece.x,piece.y,board))piece.shape=rot;
+  else if(fits(rot,piece.x-1,piece.y,board)){piece.shape=rot;piece.x--;}
+  else if(fits(rot,piece.x+1,piece.y,board)){piece.shape=rot;piece.x++;}
+});
+document.getElementById('mb-down').addEventListener('click',()=>{if(running)hardDrop();});
+
+ctx.fillStyle='#05000f';ctx.fillRect(0,0,C.width,C.height);
+</script>
+</body>
+</html>
