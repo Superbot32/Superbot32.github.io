@@ -97,10 +97,12 @@ const overlay = document.getElementById('overlay');
 const ovTitle = document.getElementById('ov-title');
 const ovSub   = document.getElementById('ov-sub');
 const ovBtn   = document.getElementById('ov-btn');
-const lifeEls = [document.getElementById('life1'), document.getElementById('life2'), document.getElementById('life3')];
+const lifeEls =[document.getElementById('life1'), document.getElementById('life2'), document.getElementById('life3')];
 
+// FIXED BUG: Narrowed down the horizontal alien gaps so the whole wave easily fits inside 
+// the canvas giving them necessary pixel margin to go right & left before dropping
 const COLS = 11, ROWS = 5;
-const ALIEN_W = 28, ALIEN_H = 20, ALIEN_GAP_X = 10, ALIEN_GAP_Y = 12;
+const ALIEN_W = 28, ALIEN_H = 20, ALIEN_GAP_X = 6, ALIEN_GAP_Y = 12;
 const PLAYER_W = 36, PLAYER_H = 16;
 const BULLET_W = 3, BULLET_H = 12;
 const BOMB_W = 4, BOMB_H = 12;
@@ -115,10 +117,10 @@ let bombTimer = 0, bombInterval = 1400, frameT = 0;
 let flashTimer = 0;
 
 function makeShields() {
-  const positions = [60, 150, 240, 330];
-  const shields = [];
+  const positions =[60, 150, 240, 330];
+  const shields =[];
   for (const px of positions) {
-    const blocks = [];
+    const blocks =[];
     for (let r = 0; r < SHIELD_ROWS; r++) {
       for (let c = 0; c < SHIELD_COLS; c++) {
         if (r === 0 && (c < 2 || c > 7)) continue;
@@ -132,8 +134,8 @@ function makeShields() {
 }
 
 function makeAliens() {
-  const arr = [];
-  const startX = 30, startY = 70;
+  const arr =[];
+  const startX = 26, startY = 70; // Better starting coordinate so they fit uniformly
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       arr.push({
@@ -148,7 +150,7 @@ function makeAliens() {
 
 function initGame() {
   player = { x: W / 2 - PLAYER_W / 2, y: H - 40 };
-  bullets = []; bombs = [];
+  bullets = []; bombs =[];
   aliens = makeAliens();
   shields = makeShields();
   score = 0; lives = 3; wave = 1;
@@ -162,7 +164,7 @@ function updateLives() {
   lifeEls.forEach((el, i) => { el.style.opacity = i < lives ? '1' : '0.15'; });
 }
 
-function alienPoints(row) { return [30, 20, 20, 10, 10][row] || 10; }
+function alienPoints(row) { return[30, 20, 20, 10, 10][row] || 10; }
 
 function drawPlayer(p) {
   ctx.fillStyle = '#00f5ff';
@@ -215,11 +217,6 @@ function drawShield(blocks) {
   ctx.fillStyle = '#39ff14';
   for (const b of blocks) if (b.alive) ctx.fillRect(b.x, b.y, SHIELD_PX, SHIELD_PX);
 }
-function drawScore() {
-  ctx.font = '11px "Press Start 2P"';
-  ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
-  ctx.fillText(score, W/2, 30);
-}
 
 function shoot() {
   const now = performance.now();
@@ -241,19 +238,19 @@ function dropAliens() {
   if (!bounds) return;
   const { minX, maxX, alive } = bounds;
 
-  // If a drop was queued last tick, do the drop now then resume sideways
   if (alienDropQueued) {
     alienDropQueued = false;
     for (const a of alive) { a.y += 14; a.frame = (a.frame + 1) % 2; }
     return; // skip sideways movement this tick
   }
 
-  // Check if next sideways step would breach a wall
   const nextMinX = minX + alienDir * alienStepX;
   const nextMaxX = maxX + alienDir * alienStepX;
 
-  if (nextMaxX >= W - 8 || nextMinX <= 8) {
-    // Flip direction and queue a drop — don't move sideways yet
+  // FIXED BUG: Made checking conditional relative to moving direction. This prevents alien bugs  
+  // bouncing infinitely up and down across each frame instead of walking inside valid bound territory
+  if ((alienDir === 1 && nextMaxX >= W - 8) || (alienDir === -1 && nextMinX <= 8)) {
+    // Flip direction and queue a drop
     alienDir *= -1;
     alienDropQueued = true;
     return;
@@ -282,7 +279,7 @@ function nextWave() {
   alienDir = 1;
   aliens = makeAliens();
   shields = makeShields();
-  bombs = []; bullets = [];
+  bombs = []; bullets =[];
   waveEl.textContent = wave;
 }
 
