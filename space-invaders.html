@@ -107,8 +107,11 @@ const BOMB_W = 4, BOMB_H = 12;
 const SHIELD_ROWS = 4, SHIELD_COLS = 10, SHIELD_PX = 5;
 
 let player, bullets, aliens, bombs, shields, score, best = 0, lives, wave;
-let running = false, raf, keys = {}, lastShot = 0, alienDir = 1, alienTimer = 0;
-let alienSpeed, bombTimer = 0, bombInterval, frameT = 0;
+let running = false, raf, keys = {}, lastShot = 0;
+let alienDir = 1, alienTimer = 0, alienSpeed = 600;
+let alienStepX = 8; // pixels per sideways step
+let alienDropQueued = false; // when true: next tick drops down, skips sideways
+let bombTimer = 0, bombInterval = 1400, frameT = 0;
 let flashTimer = 0;
 
 function makeShields() {
@@ -149,7 +152,8 @@ function initGame() {
   aliens = makeAliens();
   shields = makeShields();
   score = 0; lives = 3; wave = 1;
-  alienDir = 1; alienTimer = 0; alienSpeed = 600; bombInterval = 1400;
+  alienDir = 1; alienTimer = 0; alienSpeed = 600; alienDropQueued = false;
+  bombInterval = 1400;
   scoreEl.textContent = 0; waveEl.textContent = 1;
   updateLives();
 }
@@ -224,34 +228,40 @@ function shoot() {
   bullets.push({ x: player.x + PLAYER_W/2 - BULLET_W/2, y: player.y - BULLET_H });
 }
 
-function dropAliens() {
-  const aliveAliens = aliens.filter(a => a.alive);
-  if (!aliveAliens.length) return;
-
-  // Check boundaries BEFORE moving
+function getAlienBounds() {
+  const alive = aliens.filter(a => a.alive);
+  if (!alive.length) return null;
   let minX = Infinity, maxX = -Infinity;
-  for (const a of aliveAliens) {
-    minX = Math.min(minX, a.x);
-    maxX = Math.max(maxX, a.x + ALIEN_W);
+  for (const a of alive) { minX = Math.min(minX, a.x); maxX = Math.max(maxX, a.x + ALIEN_W); }
+  return { minX, maxX, alive };
+}
+
+function dropAliens() {
+  const bounds = getAlienBounds();
+  if (!bounds) return;
+  const { minX, maxX, alive } = bounds;
+
+  // If a drop was queued last tick, do the drop now then resume sideways
+  if (alienDropQueued) {
+    alienDropQueued = false;
+    for (const a of alive) { a.y += 14; a.frame = (a.frame + 1) % 2; }
+    return; // skip sideways movement this tick
   }
 
-  // If we're about to hit a wall, drop down and flip — don't move sideways this tick
-  if (alienDir === 1 && maxX + 8 >= W - 10) {
-    alienDir = -1;
-    for (const a of aliveAliens) { a.y += 14; a.frame = (a.frame + 1) % 2; }
-    alienTimer = 0; // full pause before next sideways step
-    return;
-  }
-  if (alienDir === -1 && minX - 8 <= 10) {
-    alienDir = 1;
-    for (const a of aliveAliens) { a.y += 14; a.frame = (a.frame + 1) % 2; }
-    alienTimer = 0;
+  // Check if next sideways step would breach a wall
+  const nextMinX = minX + alienDir * alienStepX;
+  const nextMaxX = maxX + alienDir * alienStepX;
+
+  if (nextMaxX >= W - 8 || nextMinX <= 8) {
+    // Flip direction and queue a drop — don't move sideways yet
+    alienDir *= -1;
+    alienDropQueued = true;
     return;
   }
 
-  // Normal sideways step
-  for (const a of aliveAliens) {
-    a.x += alienDir * 8;
+  // Safe to move sideways
+  for (const a of alive) {
+    a.x += alienDir * alienStepX;
     a.frame = (a.frame + 1) % 2;
   }
 }
@@ -265,8 +275,11 @@ function dropBomb() {
 
 function nextWave() {
   wave++;
-  alienSpeed = Math.max(180, 600 - (wave - 1) * 80);
-  bombInterval = Math.max(600, 1400 - (wave - 1) * 100);
+  alienSpeed = Math.max(200, 600 - (wave - 1) * 70);
+  alienStepX = Math.min(14, 8 + (wave - 1));
+  bombInterval = Math.max(700, 1400 - (wave - 1) * 100);
+  alienDropQueued = false;
+  alienDir = 1;
   aliens = makeAliens();
   shields = makeShields();
   bombs = []; bullets = [];
