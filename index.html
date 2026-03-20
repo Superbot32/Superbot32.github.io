@@ -16,6 +16,7 @@
   --green: #39ff14;
   --purple: #b44fff;
   --orange: #ff6b1a;
+  --red: #ff2200;
   --text: #e8e8ff;
   --muted: #5a5a8a;
 }
@@ -28,8 +29,6 @@ body{
   min-height:100vh;
   overflow-x:hidden;
 }
-
-/* scanline overlay */
 body::before{
   content:'';
   position:fixed;
@@ -38,34 +37,12 @@ body::before{
   pointer-events:none;
   z-index:999;
 }
-
-/* star field */
 #stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
-
-header{
-  position:relative;
-  z-index:10;
-  text-align:center;
-  padding:4rem 1rem 2.5rem;
-  border-bottom:1px solid var(--border);
-}
+header{position:relative;z-index:10;text-align:center;padding:4rem 1rem 2.5rem;border-bottom:1px solid var(--border);}
 .header-inner{max-width:900px;margin:0 auto;}
-
-.marquee-wrap{
-  overflow:hidden;
-  white-space:nowrap;
-  margin-bottom:2rem;
-  opacity:0.18;
-  font-size:11px;
-  color:var(--cyan);
-  letter-spacing:3px;
-}
-.marquee-track{
-  display:inline-block;
-  animation:marquee 18s linear infinite;
-}
+.marquee-wrap{overflow:hidden;white-space:nowrap;margin-bottom:2rem;opacity:0.18;font-size:11px;color:var(--cyan);letter-spacing:3px;}
+.marquee-track{display:inline-block;animation:marquee 18s linear infinite;}
 @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-
 .logo{
   font-family:'Press Start 2P',monospace;
   font-size:clamp(28px,6vw,64px);
@@ -75,20 +52,8 @@ header{
   animation:flicker 6s ease-in-out infinite;
   margin-bottom:1rem;
 }
-@keyframes flicker{
-  0%,90%,100%{opacity:1;}
-  92%{opacity:0.7;}
-  94%{opacity:1;}
-  96%{opacity:0.5;}
-  98%{opacity:1;}
-}
-.tagline{
-  font-size:clamp(8px,1.4vw,12px);
-  color:var(--muted);
-  letter-spacing:4px;
-  text-transform:uppercase;
-  margin-bottom:2.5rem;
-}
+@keyframes flicker{0%,90%,100%{opacity:1;}92%{opacity:0.7;}94%{opacity:1;}96%{opacity:0.5;}98%{opacity:1;}}
+.tagline{font-size:clamp(8px,1.4vw,12px);color:var(--muted);letter-spacing:4px;text-transform:uppercase;margin-bottom:2.5rem;}
 .coin-prompt{
   display:inline-block;
   font-family:'Press Start 2P',monospace;
@@ -100,29 +65,11 @@ header{
   box-shadow:0 0 16px rgba(0,245,255,0.3);
 }
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
-
-/* stats bar */
-.stats-bar{
-  display:flex;
-  justify-content:center;
-  gap:3rem;
-  padding:1.2rem 1rem;
-  border-bottom:1px solid var(--border);
-  position:relative;
-  z-index:10;
-}
+.stats-bar{display:flex;justify-content:center;gap:3rem;padding:1.2rem 1rem;border-bottom:1px solid var(--border);position:relative;z-index:10;}
 .stat{text-align:center;}
 .stat-num{font-size:22px;font-weight:900;color:var(--yellow);}
 .stat-label{font-size:8px;color:var(--muted);margin-top:4px;letter-spacing:2px;}
-
-/* section */
-.section{
-  max-width:1100px;
-  margin:0 auto;
-  padding:3rem 1.5rem;
-  position:relative;
-  z-index:10;
-}
+.section{max-width:1100px;margin:0 auto;padding:3rem 1.5rem;position:relative;z-index:10;}
 .section-title{
   font-family:'Press Start 2P',monospace;
   font-size:12px;
@@ -133,20 +80,8 @@ header{
   align-items:center;
   gap:12px;
 }
-.section-title::after{
-  content:'';
-  flex:1;
-  height:1px;
-  background:var(--border);
-}
-
-/* game grid */
-.game-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
-  gap:20px;
-}
-
+.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.game-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px;}
 .game-card{
   background:var(--panel);
   border:1px solid var(--border);
@@ -157,62 +92,23 @@ header{
   text-decoration:none;
   display:block;
 }
-.game-card:hover{
-  transform:translateY(-4px) scale(1.01);
-}
+.game-card:hover{transform:translateY(-4px) scale(1.01);}
 .game-card.available:hover{border-color:var(--accent);}
 .game-card.coming-soon{opacity:0.5;cursor:default;}
 .game-card.coming-soon:hover{transform:none;}
-
-.card-screen{
-  width:100%;
-  aspect-ratio:16/10;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  position:relative;
-  overflow:hidden;
-}
-.card-icon{
-  font-family:'Press Start 2P',monospace;
-  font-size:42px;
-  position:relative;
-  z-index:2;
-}
-.card-scanlines{
-  position:absolute;
-  inset:0;
-  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.15) 3px,rgba(0,0,0,0.15) 6px);
-  z-index:1;
-}
-
+.card-screen{width:100%;aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.card-icon{font-family:'Press Start 2P',monospace;font-size:42px;position:relative;z-index:2;}
+.card-scanlines{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.15) 3px,rgba(0,0,0,0.15) 6px);z-index:1;}
 .card-body{padding:14px 16px 16px;}
-.card-name{
-  font-family:'Press Start 2P',monospace;
-  font-size:10px;
-  color:#fff;
-  margin-bottom:6px;
-  letter-spacing:1px;
-}
-.card-desc{
-  font-size:9px;
-  color:var(--muted);
-  line-height:1.7;
-  font-family:'Orbitron',monospace;
-  margin-bottom:12px;
-}
+.card-name{font-family:'Press Start 2P',monospace;font-size:10px;color:#fff;margin-bottom:6px;letter-spacing:1px;}
+.card-desc{font-size:9px;color:var(--muted);line-height:1.7;font-family:'Orbitron',monospace;margin-bottom:12px;}
 .card-footer{display:flex;align-items:center;justify-content:space-between;}
-.card-badge{
-  font-size:7px;
-  padding:3px 8px;
-  letter-spacing:1px;
-  font-family:'Press Start 2P',monospace;
-}
+.card-badge{font-size:7px;padding:3px 8px;letter-spacing:1px;font-family:'Press Start 2P',monospace;}
 .badge-play{background:var(--accent);color:#000;}
 .badge-soon{background:var(--border);color:var(--muted);}
 .card-controls{font-size:8px;color:var(--muted);}
 
-/* individual card accent colors */
+/* card accent colors */
 .card-snake{--accent:var(--green);}
 .card-flappy{--accent:var(--yellow);}
 .card-space{--accent:var(--cyan);}
@@ -222,9 +118,10 @@ header{
 .card-asteroids{--accent:var(--cyan);}
 .card-frogger{--accent:var(--green);}
 .card-pong{--accent:var(--pink);}
-.card-donkey{--accent:var(--orange);}
+.card-mortal{--accent:var(--red);}
+.card-platformer{--accent:var(--orange);}
 
-/* screen bg per game */
+/* screen backgrounds */
 .screen-snake{background:#050f05;}
 .screen-flappy{background:#1a3a5c;}
 .screen-space{background:#000;}
@@ -234,32 +131,19 @@ header{
 .screen-asteroids{background:#000;}
 .screen-frogger{background:#001a00;}
 .screen-pong{background:#000;}
-.screen-donkey{background:#1a0a00;}
+.screen-mortal{background:#0a0005;}
+.screen-platformer{background:#1a0a00;}
 
-/* pixel decoration inside screens */
 .pixel-snake::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(57,255,20,0.12) 0%,transparent 60%);}
 .pixel-flappy::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 40%,rgba(255,224,51,0.12) 0%,transparent 60%);}
 .pixel-space::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 60%,rgba(0,245,255,0.1) 0%,transparent 60%);}
 .pixel-tetris::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 40% 50%,rgba(180,79,255,0.14) 0%,transparent 60%);}
-.pixel-breakout::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 60% 40%,rgba(255,107,26,0.12) 0%,transparent 60%);}
+.pixel-pong::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(255,45,120,0.12) 0%,transparent 60%);}
+.pixel-mortal::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 60%,rgba(255,34,0,0.15) 0%,transparent 60%);}
 
-footer{
-  border-top:1px solid var(--border);
-  text-align:center;
-  padding:2.5rem 1rem;
-  position:relative;
-  z-index:10;
-}
-.footer-logo{
-  font-family:'Press Start 2P',monospace;
-  font-size:10px;
-  color:var(--yellow);
-  letter-spacing:4px;
-  margin-bottom:10px;
-}
+footer{border-top:1px solid var(--border);text-align:center;padding:2.5rem 1rem;position:relative;z-index:10;}
+.footer-logo{font-family:'Press Start 2P',monospace;font-size:10px;color:var(--yellow);letter-spacing:4px;margin-bottom:10px;}
 .footer-text{font-size:9px;color:var(--muted);letter-spacing:2px;}
-
-/* hover glow per card */
 .game-card.available:hover .card-screen{box-shadow:inset 0 0 30px rgba(255,255,255,0.05);}
 </style>
 </head>
@@ -270,7 +154,7 @@ footer{
 <header>
   <div class="marquee-wrap">
     <span class="marquee-track">
-      INSERT COIN &nbsp;&nbsp;◆&nbsp;&nbsp; HIGH SCORE &nbsp;&nbsp;◆&nbsp;&nbsp; PLAYER ONE &nbsp;&nbsp;◆&nbsp;&nbsp; PRESS START &nbsp;&nbsp;◆&nbsp;&nbsp; GAME OVER &nbsp;&nbsp;◆&nbsp;&nbsp; LEVEL UP &nbsp;&nbsp;◆&nbsp;&nbsp; INSERT COIN &nbsp;&nbsp;◆&nbsp;&nbsp; HIGH SCORE &nbsp;&nbsp;◆&nbsp;&nbsp; PLAYER ONE &nbsp;&nbsp;◆&nbsp;&nbsp; PRESS START &nbsp;&nbsp;◆&nbsp;&nbsp; GAME OVER &nbsp;&nbsp;◆&nbsp;&nbsp; LEVEL UP &nbsp;&nbsp;◆&nbsp;&nbsp;
+      INSERT COIN &nbsp;&nbsp;◆&nbsp;&nbsp; HIGH SCORE &nbsp;&nbsp;◆&nbsp;&nbsp; PLAYER ONE &nbsp;&nbsp;◆&nbsp;&nbsp; PRESS START &nbsp;&nbsp;◆&nbsp;&nbsp; GAME OVER &nbsp;&nbsp;◆&nbsp;&nbsp; LEVEL UP &nbsp;&nbsp;◆&nbsp;&nbsp; FIGHT! &nbsp;&nbsp;◆&nbsp;&nbsp; INSERT COIN &nbsp;&nbsp;◆&nbsp;&nbsp; HIGH SCORE &nbsp;&nbsp;◆&nbsp;&nbsp; PLAYER ONE &nbsp;&nbsp;◆&nbsp;&nbsp; PRESS START &nbsp;&nbsp;◆&nbsp;&nbsp; GAME OVER &nbsp;&nbsp;◆&nbsp;&nbsp; LEVEL UP &nbsp;&nbsp;◆&nbsp;&nbsp; FIGHT! &nbsp;&nbsp;◆&nbsp;&nbsp;
     </span>
   </div>
   <div class="header-inner">
@@ -281,8 +165,8 @@ footer{
 </header>
 
 <div class="stats-bar">
-  <div class="stat"><div class="stat-num" id="game-count">2</div><div class="stat-label">Games Live</div></div>
-  <div class="stat"><div class="stat-num">∞</div><div class="stat-label">Free to Play</div></div>
+  <div class="stat"><div class="stat-num" id="game-count">0</div><div class="stat-label">Games Live</div></div>
+  <div class="stat"><div class="stat-num">&#8734;</div><div class="stat-label">Free to Play</div></div>
   <div class="stat"><div class="stat-num">10+</div><div class="stat-label">Coming Soon</div></div>
 </div>
 
@@ -350,13 +234,43 @@ footer{
       </div>
     </a>
 
+    <a href="pong.html" class="game-card available card-pong">
+      <div class="card-screen screen-pong pixel-pong">
+        <div class="card-scanlines"></div>
+        <div class="card-icon" style="color:#ff2d78;">&#9646;</div>
+      </div>
+      <div class="card-body">
+        <div class="card-name">PONG</div>
+        <div class="card-desc">The original. Two paddles. One ball. Endless rivalry.</div>
+        <div class="card-footer">
+          <span class="card-badge badge-play">PLAY NOW</span>
+          <span class="card-controls">W/S + ARROWS</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="mortal-fighters.html" class="game-card available card-mortal">
+      <div class="card-screen screen-mortal pixel-mortal">
+        <div class="card-scanlines"></div>
+        <div class="card-icon" style="color:#ff2200;">&#9876;</div>
+      </div>
+      <div class="card-body">
+        <div class="card-name">MORTAL FIGHTERS</div>
+        <div class="card-desc">Punch, kick and unleash specials. Best of 3 rounds.</div>
+        <div class="card-footer">
+          <span class="card-badge badge-play">PLAY NOW</span>
+          <span class="card-controls">F/G/T + ,/./</span>
+        </div>
+      </div>
+    </a>
+
   </div>
 
   <div class="section-title" style="margin-top:3.5rem;">COMING SOON</div>
   <div class="game-grid">
 
     <div class="game-card coming-soon card-breakout">
-      <div class="card-screen screen-breakout pixel-breakout">
+      <div class="card-screen screen-breakout">
         <div class="card-scanlines"></div>
         <div class="card-icon" style="color:#ff6b1a;opacity:0.5;">&#9711;</div>
       </div>
@@ -403,20 +317,8 @@ footer{
       </div>
     </div>
 
-    <div class="game-card coming-soon card-pong">
-      <div class="card-screen screen-pong">
-        <div class="card-scanlines"></div>
-        <div class="card-icon" style="color:#ff2d78;opacity:0.5;">&#9646;</div>
-      </div>
-      <div class="card-body">
-        <div class="card-name">PONG</div>
-        <div class="card-desc">The original. Two paddles. One ball. Endless rivalry.</div>
-        <div class="card-footer"><span class="card-badge badge-soon">COMING SOON</span></div>
-      </div>
-    </div>
-
-    <div class="game-card coming-soon card-donkey">
-      <div class="card-screen screen-donkey">
+    <div class="game-card coming-soon card-platformer">
+      <div class="card-screen screen-platformer">
         <div class="card-scanlines"></div>
         <div class="card-icon" style="color:#ff6b1a;opacity:0.5;">&#9650;</div>
       </div>
@@ -439,41 +341,25 @@ footer{
 const canvas = document.getElementById('stars');
 const ctx = canvas.getContext('2d');
 let stars = [];
-
-function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 function initStars() {
   stars = [];
   for (let i = 0; i < 180; i++) {
-    stars.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      r: Math.random() * 1.2 + 0.2,
-      o: Math.random() * 0.6 + 0.1,
-      speed: Math.random() * 0.3 + 0.05
-    });
+    stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, r: Math.random()*1.2+0.2, o: Math.random()*0.6+0.1, speed: Math.random()*0.3+0.05 });
   }
 }
-
 function drawStars() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   for (const s of stars) {
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(200,210,255,${s.o})`;
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(200,210,255,${s.o})`; ctx.fill();
     s.y += s.speed;
-    if (s.y > canvas.height) { s.y = 0; s.x = Math.random() * canvas.width; }
+    if (s.y > canvas.height) { s.y = 0; s.x = Math.random()*canvas.width; }
   }
   requestAnimationFrame(drawStars);
 }
-
 window.addEventListener('resize', () => { resize(); initStars(); });
 resize(); initStars(); drawStars();
-
 document.getElementById('game-count').textContent = document.querySelectorAll('.game-card.available').length;
 </script>
 </body>
