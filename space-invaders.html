@@ -227,14 +227,31 @@ function shoot() {
 function dropAliens() {
   const aliveAliens = aliens.filter(a => a.alive);
   if (!aliveAliens.length) return;
+
+  // Check boundaries BEFORE moving
   let minX = Infinity, maxX = -Infinity;
-  for (const a of aliveAliens) { minX = Math.min(minX, a.x); maxX = Math.max(maxX, a.x + ALIEN_W); }
-  let drop = false;
-  if (alienDir === 1 && maxX >= W - 10) { alienDir = -1; drop = true; }
-  else if (alienDir === -1 && minX <= 10) { alienDir = 1; drop = true; }
   for (const a of aliveAliens) {
-    a.x += drop ? 0 : alienDir * 8;
-    if (drop) a.y += 14;
+    minX = Math.min(minX, a.x);
+    maxX = Math.max(maxX, a.x + ALIEN_W);
+  }
+
+  // If we're about to hit a wall, drop down and flip — don't move sideways this tick
+  if (alienDir === 1 && maxX + 8 >= W - 10) {
+    alienDir = -1;
+    for (const a of aliveAliens) { a.y += 14; a.frame = (a.frame + 1) % 2; }
+    alienTimer = 0; // full pause before next sideways step
+    return;
+  }
+  if (alienDir === -1 && minX - 8 <= 10) {
+    alienDir = 1;
+    for (const a of aliveAliens) { a.y += 14; a.frame = (a.frame + 1) % 2; }
+    alienTimer = 0;
+    return;
+  }
+
+  // Normal sideways step
+  for (const a of aliveAliens) {
+    a.x += alienDir * 8;
     a.frame = (a.frame + 1) % 2;
   }
 }
